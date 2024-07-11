@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const crypto = require('crypto'); // Import the crypto lib
@@ -6,7 +5,7 @@ const crypto = require('crypto'); // Import the crypto lib
 const app = express();
 app.use(bodyParser.json());
 
-const secret = process.env.WEBHOOK_SECRET || 'eAoho9vqPDG5rsHDYN5skfqzZvINvOsbB3xCOf2up7CSGtgGw7Q38XYfsdl9oewac3QHhxkkR/ncKwNHmSQ5Wg=='; // Enter your secret key
+const secret = 'eAoho9vqPDG5rsHDYN5skfqzZvINvOsbB3xCOf2up7CSGtgGw7Q38XYfsdl9oewac3QHhxkkR/ncKwNHmSQ5Wg=='; // Enter your secret key between the quotes
 
 app.post('/webhook', (req, res) => {
   const headerSignature = req.headers['x-webhook-signature']; // Get the received signature
@@ -16,23 +15,15 @@ app.post('/webhook', (req, res) => {
   const signature = crypto
     .createHmac('sha256', secret)
     .update(payload)
-    .digest('base64'); // Use 'base64' to match the format of the provided signature
+    .digest('hex'); 
 
   console.log('Computed hash:', signature);
   console.log('Signature from header:', headerSignature);
   console.log('Payload:', payload);
 
-  // Ensure the headerSignature is in the correct format
-  const headerSignatureBuffer = Buffer.from(headerSignature, 'base64');
-  const signatureBuffer = Buffer.from(signature, 'base64');
-
-  // Log the lengths of both buffers
-  console.log('Length of computed hash buffer:', signatureBuffer.length);
-  console.log('Length of header signature buffer:', headerSignatureBuffer.length);
-
-  // Compare signatures
-  if (signatureBuffer.length !== headerSignatureBuffer.length || !crypto.timingSafeEqual(signatureBuffer, headerSignatureBuffer)) {
-    console.error('Invalid webhook request: signatures do not match.');
+  // Compare, if fail refuse the request
+  if (!crypto.timingSafeEqual(Buffer.from(signature, 'utf-8'), Buffer.from(headerSignature, 'utf-8'))) {
+    console.error("Invalid webhook request");
     return res.status(403).send('Forbidden');
   }
 
