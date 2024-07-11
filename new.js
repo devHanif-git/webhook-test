@@ -11,18 +11,21 @@ app.post('/webhook', (req, res) => {
   const headerSignature = req.headers['x-webhook-signature'];
   const payload = JSON.stringify(req.body);
 
+  // Generate HMAC signature
   const signature = crypto
     .createHmac('sha256', secret)
-    .update(payload)
+    .update(payload, 'utf8')
     .digest('hex');
 
+  // Logging for debugging
   console.log('Computed hash:', signature);
   console.log('Signature from header:', headerSignature);
   console.log('Payload:', payload);
   console.log('Length of computed hash buffer:', Buffer.from(signature).length);
-  console.log('Length of header signature buffer:', Buffer.from(headerSignature, 'utf-8').length);
+  console.log('Length of header signature buffer:', Buffer.from(headerSignature, 'hex').length);
 
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(headerSignature, 'utf-8'))) {
+  // Compare signatures
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(headerSignature, 'hex'))) {
     console.error("Invalid webhook request: signatures do not match.");
     return res.status(403).send('Forbidden');
   }
