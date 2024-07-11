@@ -8,7 +8,7 @@ app.use(bodyParser.json({ type: '*/*' }));
 const secret = 'eAoho9vqPDG5rsHDYN5skfqzZvINvOsbB3xCOf2up7CSGtgGw7Q38XYfsdl9oewac3QHhxkkR/ncKwNHmSQ5Wg=='; // Replace with your actual secret key
 
 app.post('/webhook', (req, res) => {
-  const headerSignature = req.headers['x-webhook-signature'];
+  const headerSignature = req.headers['X-Webhook-Signature'];
   const payload = JSON.stringify(req.body);
 
   // Generate HMAC signature
@@ -20,16 +20,11 @@ app.post('/webhook', (req, res) => {
   // Logging for debugging
   console.log('Computed hash:', signature);
   console.log('Signature from header:', headerSignature);
-  console.log('Payload:', payload);
+  //console.log('Payload:', payload);
   console.log('Length of computed hash buffer:', Buffer.from(signature, 'hex').length);
   console.log('Length of header signature buffer:', Buffer.from(headerSignature, 'hex').length);
 
-  // Convert both signatures to buffers
-  const computedBuffer = Buffer.from(signature, 'hex');
-  const headerBuffer = Buffer.from(headerSignature, 'hex');
-
-  // Compare signatures
-  if (!crypto.timingSafeEqual(computedBuffer, headerBuffer)) {
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(headerSignature, 'utf-8'))) {
     console.error("Invalid webhook request: signatures do not match.");
     return res.status(403).send('Forbidden');
   }
