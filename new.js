@@ -2,25 +2,12 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
 
-// Set up the Express app and middleware
 const app = express();
 app.use(bodyParser.json({ type: '*/*' }));
 
-// Define your secret key
 const secret = 'eAoho9vqPDG5rsHDYN5skfqzZvINvOsbB3xCOf2up7CSGtgGw7Q38XYfsdl9oewac3QHhxkkR/ncKwNHmSQ5Wg==';
 
-// Helper function to generate a unique key
-const generateRandomKey = (prefix) => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = prefix;
-  for (let i = 0; i < 5; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-};
-
-// Webhook endpoint
-app.post('/webhook', async (req, res) => {
+app.post('/webhook', (req, res) => {
   const headerSignature = req.headers['x-webhook-signature'];
   const payload = JSON.stringify(req.body);
 
@@ -32,8 +19,10 @@ app.post('/webhook', async (req, res) => {
   console.log('Computed hash:', signature);
   console.log('Signature from header:', headerSignature);
   console.log('Payload:', payload);
+  console.log('Length of computed hash buffer:', Buffer.from(signature).length);
+  console.log('Length of header signature buffer:', Buffer.from(headerSignature, 'utf-8').length);
 
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(headerSignature, 'utf-8'))) {
+  if (!crypto.timingSafeEqual(Buffer.from(signature, 'utf-8'), Buffer.from(headerSignature, 'utf-8'))) {
     console.error("Invalid webhook request: signatures do not match.");
     return res.status(403).send('Forbidden');
   }
@@ -55,7 +44,7 @@ app.post('/webhook', async (req, res) => {
       for (let i = 0; i < product.quantity; i++) {
         const key = generateRandomKey('iN-');
         keys.push(key);
-        console.log(`Key generated for ${buyer.email}: ${key}`);
+        console.log(`Key generated for ${buyer.emailAddress}: ${key}`);
       }
     }
 
@@ -64,6 +53,15 @@ app.post('/webhook', async (req, res) => {
 
   res.status(200).send('Webhook received');
 });
+
+const generateRandomKey = (prefix) => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = prefix;
+  for (let i = 0; i < 5; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
