@@ -21,11 +21,15 @@ app.post('/webhook', (req, res) => {
   console.log('Computed hash:', signature);
   console.log('Signature from header:', headerSignature);
   console.log('Payload:', payload);
-  console.log('Length of computed hash buffer:', Buffer.from(signature).length);
+  console.log('Length of computed hash buffer:', Buffer.from(signature, 'hex').length);
   console.log('Length of header signature buffer:', Buffer.from(headerSignature, 'hex').length);
 
+  // Convert both signatures to buffers
+  const computedBuffer = Buffer.from(signature, 'hex');
+  const headerBuffer = Buffer.from(headerSignature, 'hex');
+
   // Compare signatures
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(headerSignature, 'hex'))) {
+  if (!crypto.timingSafeEqual(computedBuffer, headerBuffer)) {
     console.error("Invalid webhook request: signatures do not match.");
     return res.status(403).send('Forbidden');
   }
