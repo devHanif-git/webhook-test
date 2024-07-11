@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const app = express();
 app.use(bodyParser.json({ type: '*/*' }));
 
-const secret = 'eAoho9vqPDG5rsHDYN5skfqzZvINvOsbB3xCOf2up7CSGtgGw7Q38XYfsdl9oewac3QHhxkkR/ncKwNHmSQ5Wg==';
+const secret = 'eAoho9vqPDG5rsHDYN5skfqzZvINvOsbB3xCOf2up7CSGtgGw7Q38XYfsdl9oewac3QHhxkkR/ncKwNHmSQ5Wg=='; // Replace with your actual secret key
 
 app.post('/webhook', (req, res) => {
   const headerSignature = req.headers['x-webhook-signature'];
@@ -22,7 +22,7 @@ app.post('/webhook', (req, res) => {
   console.log('Length of computed hash buffer:', Buffer.from(signature).length);
   console.log('Length of header signature buffer:', Buffer.from(headerSignature, 'utf-8').length);
 
-  if (!crypto.timingSafeEqual(Buffer.from(signature, 'utf-8'), Buffer.from(headerSignature, 'utf-8'))) {
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(headerSignature, 'utf-8'))) {
     console.error("Invalid webhook request: signatures do not match.");
     return res.status(403).send('Forbidden');
   }
@@ -32,7 +32,7 @@ app.post('/webhook', (req, res) => {
   const event = req.body;
 
   if (event.type === 'order:complete') {
-    const { products, buyer } = event;
+    const { products, customer } = event;
 
     let keys = [];
     for (let product of products) {
@@ -44,7 +44,7 @@ app.post('/webhook', (req, res) => {
       for (let i = 0; i < product.quantity; i++) {
         const key = generateRandomKey('iN-');
         keys.push(key);
-        console.log(`Key generated for ${buyer.emailAddress}: ${key}`);
+        console.log(`Key generated for ${customer.emailAddress}: ${key}`);
       }
     }
 
@@ -63,7 +63,7 @@ const generateRandomKey = (prefix) => {
   return result;
 };
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
