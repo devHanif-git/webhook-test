@@ -3,75 +3,46 @@ const bodyParser = require('body-parser');
 const crypto = require('crypto');
 
 const app = express();
-app.use(bodyParser.json({ type: '*/*' }));
+const secret = 'eAoho9vqPDG5rsHDYN5skfqzZvINvOsbB3xCOf2up7CSGtgGw7Q38XYfsdl9oewac3QHhxkkR/ncKwNHmSQ5Wg==';
+const sigHeaderName = 'x-webhook-signature'|| 'X-Webhook-Signature'; 
 
-const secret = 'eAoho9vqPDG5rsHDYN5skfqzZvINvOsbB3xCOf2up7CSGtgGw7Q38XYfsdl9oewac3QHhxkkR/ncKwNHmSQ5Wg=='; // Replace with your actual secret key
+// Middleware to capture raw body
+app.use(
+  bodyParser.json({
+    verify: (req, res, buf, encoding) => {
+      if (buf && buf.length) {
+        req.rawBody = buf.toString(encoding || 'utf8');
+      }
+    },
+  })
+);
 
 app.post('/webhook', (req, res) => {
-  //const headerSignature = req.headers['X-Webhook-Signature'];
-  const headerSignature = req.headers['x-webhook-signature'];
-  const payload = req.body;
+  const headerSignature = req.headers[sigHeaderName]; // Get the received signature
+  const payload = req.rawBody; // Get the raw body
 
-  // Generate HMAC signature
+  console.log('Payload:', payload);
+  console.log('Header Signature:', headerSignature);
+
   const signature = crypto
     .createHmac('sha256', secret)
     .update(payload, 'utf8')
-    .digest('hex');
+    .digest('hex'); // Generate our own HMAC signature from the raw body
 
-  // Logging for debugging
   console.log('Computed hash:', signature);
-  console.log('Signature from header:', headerSignature);
-  console.log('Payload:', payload);
-  console.log('Length of computed hash buffer:', Buffer.from(signature, 'hex').length);
-  console.log('Length of header signature buffer:', Buffer.from(headerSignature, 'hex').length);
+  console.log('Header hash:', headerSignature);
 
-  // Convert both signatures to buffers
-  const computedBuffer = Buffer.from(signature, 'hex');
-  const headerBuffer = Buffer.from(headerSignature, 'hex');
-
-  // Compare signatures
-  if (!crypto.timingSafeEqual(computedBuffer, headerBuffer)) {
-    console.error("Invalid webhook request: signatures do not match.");
-    return res.status(403).send('Forbidden');
+  if (!crypto.timingSafeEqual(Buffer.from(signature, 'utf8'), Buffer.from(headerSignature, 'utf8'))) {
+    console.error('Invalid webhook request: signatures do not match.');
+    return res.status(401).send('Invalid webhook request');
   }
 
-  console.log("Valid webhook request received");
-
-  const event = req.body;
-
-  if (event.type === 'order:complete') {
-    const { products, customer } = event;
-
-    let keys = [];
-    for (let product of products) {
-      let duration = 'LIFETIME';
-      if (product.product.name.includes('ONE TIME')) {
-        duration = 'ONE TIME';
-      }
-
-      for (let i = 0; i < product.quantity; i++) {
-        const key = generateRandomKey('iN-');
-        keys.push(key);
-        console.log(`Key generated for ${customer.emailAddress}: ${key}`);
-      }
-    }
-
-    return res.status(200).json({ keys });
-  }
-
+  // If you are here, then the request was valid and you can do whatever processing you need
+  console.log('Valid webhook request');
   res.status(200).send('Webhook received');
 });
 
-const generateRandomKey = (prefix) => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = prefix;
-  for (let i = 0; i < 5; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-};
-
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+const port = process.env.PORT || 8080;
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
