@@ -24,12 +24,16 @@ app.post('/webhook', (req, res) => {
         .update(payload)
         .digest('hex');
 
+    // Convert both signatures to lowercase for comparison
+    const headerSignatureLower = headerSignature.toLowerCase();
+    const signatureLower = signature.toLowerCase();
+
     // Log the signatures for comparison
-    console.log('Header Signature:', headerSignature);
-    console.log('Generated Signature:', signature);
+    console.log('Header Signature:', headerSignatureLower);
+    console.log('Generated Signature:', signatureLower);
 
     // Compare the signatures
-    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(headerSignature, 'utf-8'))) {
+    if (!crypto.timingSafeEqual(Buffer.from(signatureLower), Buffer.from(headerSignatureLower, 'utf-8'))) {
         console.error("Invalid webhook request");
         return res.status(400).send('Invalid webhook request');
     }
