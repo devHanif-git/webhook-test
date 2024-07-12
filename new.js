@@ -8,7 +8,8 @@ app.use(bodyParser.json({ type: '*/*' }));
 const secret = 'eAoho9vqPDG5rsHDYN5skfqzZvINvOsbB3xCOf2up7CSGtgGw7Q38XYfsdl9oewac3QHhxkkR/ncKwNHmSQ5Wg=='; // Replace with your actual secret key
 
 app.post('/webhook', (req, res) => {
-  const headerSignature = req.headers['X-Webhook-Signature'];
+  //const headerSignature = req.headers['X-Webhook-Signature'];
+  const headerSignature = req.headers['x-webhook-signature'];
   const payload = req.body;
 
   // Generate HMAC signature
