@@ -109,13 +109,6 @@ async function handlePurchaseEvent(products, customer) {
 
       for (let i = 0; i < quantity; i++) {
         const key = await generateUniqueKey("iN-");
-        await Key.create({
-          key,
-          duration: duration,
-          note: `Purchased by ${customer.emailAddress}`,
-          generated_by: "Webhook",
-        });
-        keys.push(key);
         console.log(`Key generated for ${customer.emailAddress}: ${key}`);
       }
     }
