@@ -22,16 +22,9 @@ const generateRandomKey = (prefix) => {
   return result;
 };
 
-const generateUniqueKey = async (prefix) => {
-  let uniqueKey = null;
-  while (!uniqueKey) {
-    const key = generateRandomKey(prefix);
-    const existingKey = await Key.findOne({ where: { key } });
-    if (!existingKey) {
-      uniqueKey = key;
-    }
-  }
-  return uniqueKey;
+// Simplify the generateUniqueKey function
+const generateUniqueKey = (prefix) => {
+  return generateRandomKey(prefix);
 };
 
 // Middleware to parse raw body
@@ -98,6 +91,7 @@ app.post("/webhook", async (req, res) => {
   res.status(200).send("Webhook processed");
 });
 
+// Update the handlePurchaseEvent function
 async function handlePurchaseEvent(products, customer) {
   try {
     let keys = [];
@@ -118,7 +112,7 @@ async function handlePurchaseEvent(products, customer) {
       );
 
       for (let i = 0; i < quantity; i++) {
-        const key = await generateUniqueKey("iN-");
+        const key = generateUniqueKey("iN-");
         console.log(`Key generated for ${customer.emailAddress}: ${key}`);
         keys.push(key); // Add the generated key to the keys array
       }
