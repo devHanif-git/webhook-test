@@ -9,6 +9,9 @@ const port = process.env.PORT || 8080;
 const secret =
   "sLmae4BfiIOu1ccgUTeDXHkq7pg73gH4auAMImh2DUDYQ9FyYfxJY6upf+/FtPRhjf8GyebOQg7IAQwwF3iKbQ==";
 
+// Mock database
+const keysInDatabase = new Set();
+
 const generateRandomKey = (prefix) => {
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
