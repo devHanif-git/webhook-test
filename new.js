@@ -68,9 +68,16 @@ app.post("/webhook", async (req, res) => {
 
   // If you are here, then the request was valid and you can do whatever processing you need
   console.log("Valid webhook request received");
-  // Process the payload here
 
-  const event = req.body;
+  // Parse the payload
+  let event;
+  try {
+    event = JSON.parse(payload.toString('utf-8'));
+  } catch (error) {
+    console.error("Error parsing JSON payload:", error);
+    return res.status(400).send("Invalid JSON payload");
+  }
+
   // Handle different event types
   if (event.type === "order:complete") {
     const { products, customer } = event;
@@ -110,6 +117,7 @@ async function handlePurchaseEvent(products, customer) {
       for (let i = 0; i < quantity; i++) {
         const key = await generateUniqueKey("iN-");
         console.log(`Key generated for ${customer.emailAddress}: ${key}`);
+        keys.push(key); // Add the generated key to the keys array
       }
     }
 
